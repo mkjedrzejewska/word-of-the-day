@@ -43,12 +43,14 @@ const main = async () => {
             method: 'POST',
             data: slackBody,
         })
+
+        console.log('Word of the day sent!!')
     } catch (e) {
         console.log('error', e)
     }
 }
 
-cron.schedule('* * * * *', () => {
+cron.schedule('0 9 * * *', () => {
     main()
 }, {
     timezone: "Europe/Warsaw"
