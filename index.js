@@ -1,47 +1,97 @@
+const get = require('lodash/get')
+const join = require('lodash/join')
+const toUpper = require('lodash/toUpper')
+const head = require('lodash/head')
 const axios = require('axios')
-const cron = require('node-cron');
+const cron = require('node-cron')
+const express = require('express')
+const cheerio = require('cheerio')
 
 const hook = 'T1192U9B4/B013R0CF2H3/BQWBiYadgT23swOdqm0X3dt9'
+const API_key = '5b692760-b0cd-4273-9878-f3bf88558a90'
+const wordOfTheDayUrl = 'https://www.merriam-webster.com/word-of-the-day'
+const PORT = process.env.PORT || 5000
 
-const PORT = process.env.PORT || 5000;
-const express = require('express');
+/// Initiate server ///
 const app = express();
 
 app.get('/', (req, res) => res.send('Word of the day'))
 
 app.listen(PORT)
 
-const getData = async function() {
-    const json = await axios({
-        url: 'https://next.json-generator.com/api/json/get/V1clUVS9u',
-    })
+/// Get the word of the day from the website ///
+const getWordOfTheDay = async () => {
+  const result = await axios.get(wordOfTheDayUrl)
+  const $ = cheerio.load(result.data)
+  return $('h1').text()
+}
 
-    return json.data.map(person => ({
-        age: person.age,
-        email: person.email,
-        firstName: person.name.first,
-        lastName: person.name.last,
+/// Send request to dictionary API ///
+const getData = async (word) => {
+    const json = await axios({
+        url: `https://www.dictionaryapi.com/api/v3/references/collegiate/json/${word}?key=${API_key}`,
+    })
+    return json.data.map(meaning => ({
+        type: get(meaning, 'fl', ''), //part of the speech
+        pronunciation: get(meaning, 'hwi.prs[0].mw', ''), //pronunciation
+        definitions: meaning.shortdef, //array of definitions
+        art: get(meaning, 'art.artid', ''), //illustration
     }))
 }
 
+/// Methods that build the slack message ////
+const pronunc = entries => head(entries.map(entry => entry.pronunciation))
+
+const definition = meaning => join(meaning.definitions.map(definition => (`• ${definition}`)), '\n')
+
+const illustrationUrl = artId => `https://www.merriam-webster.com/assets/mw/static/art/dict/${artId}.gif`
+
+const section = meaning => ({
+    type: "section",
+    text: {
+        type: "mrkdwn",
+        text: `_${meaning.type}_\n ${definition(meaning)}`
+    },
+    ...(meaning.art && {
+        accessory: {
+        type: "image",
+        image_url: illustrationUrl(meaning.art),
+        alt_text: " ",
+        }})
+})
+
+const message = (word, entries) => JSON.stringify({
+    blocks: [
+        {
+            type: "divider"
+        },
+        {
+            type: "section",
+            text: {
+                type: "mrkdwn",
+                text: `*${word}* _${pronunc(entries)}_`
+            }
+        },
+        {
+            type: "divider"
+        },
+    ].concat(entries.map(entry => section(entry)))
+})
+
+/// Main function ///
 const main = async () => {
     try {
-        // get the data
-        const people = await getData()
+        // get today's word of the day
+        const word = await getWordOfTheDay()
 
-        const slackBody = {
-            mkdwn: true, // slack markdown
-            text: 'Test message!',
-            attachments: people.map(person => ({
-                color: 'good',
-                text: `*${person.email}* and their name is ${person.firstName}`,
-            }))
-        }
+        // get the data
+        const entries = await getData(word)
+
         //post to slack
         const res = await axios({
             url: `https://hooks.slack.com/services/${hook}`,
             method: 'POST',
-            data: slackBody,
+            data: message(word,entries),
         })
 
         console.log('Word of the day sent!!')
