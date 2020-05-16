@@ -3,6 +3,14 @@ const cron = require('node-cron');
 
 const hook = 'T1192U9B4/B013R0CF2H3/BQWBiYadgT23swOdqm0X3dt9'
 
+const PORT = process.env.PORT || 5000;
+const express = require('express');
+const app = express();
+
+app.get('/', (req, res) => res.send('Word of the day'))
+
+app.listen(PORT)
+
 const getData = async function() {
     const json = await axios({
         url: 'https://next.json-generator.com/api/json/get/V1clUVS9u',
@@ -29,16 +37,12 @@ const main = async () => {
                 text: `*${person.email}* and their name is ${person.firstName}`,
             }))
         }
-
         //post to slack
         const res = await axios({
             url: `https://hooks.slack.com/services/${hook}`,
             method: 'POST',
             data: slackBody,
         })
-
-        console.log(res)
-
     } catch (e) {
         console.log('error', e)
     }
