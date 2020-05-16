@@ -1,4 +1,5 @@
 const axios = require('axios')
+const cron = require('node-cron');
 
 const hook = 'T1192U9B4/B013R0CF2H3/BQWBiYadgT23swOdqm0X3dt9'
 
@@ -43,4 +44,8 @@ const main = async () => {
     }
 }
 
-main()
+cron.schedule('* * * * *', () => {
+    main()
+}, {
+    timezone: "Europe/Warsaw"
+})
