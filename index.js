@@ -108,4 +108,6 @@ const main = async () => {
     }
 }
 
-cron.schedule('25 10 * * *', () => main())
+cron.schedule('30 8 * * *', () => {
+    main()
+})
