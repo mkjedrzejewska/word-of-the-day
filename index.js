@@ -23,7 +23,7 @@ app.listen(PORT)
 const getWordOfTheDay = async () => {
   const result = await axios.get(wordOfTheDayUrl)
   const $ = cheerio.load(result.data)
-  return $('h1').text()
+  return ({word: $('h1').text(), didYouKnow: $('.left-content-box p').text()})
 }
 
 /// Send request to dictionary API ///
@@ -50,7 +50,7 @@ const section = meaning => ({
     type: "section",
     text: {
         type: "mrkdwn",
-        text: `_${meaning.type}_\n ${definition(meaning)}`
+        text: `_*${meaning.type}*_\n ${definition(meaning)}`
     },
     ...(meaning.art && {
         accessory: {
@@ -60,7 +60,7 @@ const section = meaning => ({
         }})
 })
 
-const message = (word, entries) => JSON.stringify({
+const message = (word, didYouKnow, entries) => JSON.stringify({
     blocks: [
         {
             type: "divider"
@@ -75,14 +75,22 @@ const message = (word, entries) => JSON.stringify({
         {
             type: "divider"
         },
-    ].concat(entries.map(entry => section(entry)))
+    ].concat(entries.map(entry => section(entry))).concat({        
+        type: "section",
+        text: {
+            type: "mrkdwn",
+            text: `_${didYouKnow}_`
+        }
+    ,})
 })
 
 /// Main function ///
 const main = async () => {
     try {
         // get today's word of the day
-        const word = await getWordOfTheDay()
+        const wordOfTheDay = await getWordOfTheDay()
+        const word = wordOfTheDay.word
+        const didYouKnow = wordOfTheDay.didYouKnow
 
         // get the data
         const entries = await getData(word)
@@ -91,7 +99,7 @@ const main = async () => {
         const res = await axios({
             url: `https://hooks.slack.com/services/${hook}`,
             method: 'POST',
-            data: message(word,entries),
+            data: message(word, didYouKnow, entries),
         })
 
         console.log('Word of the day sent!!')
