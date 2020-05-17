@@ -7,7 +7,10 @@ const cron = require('node-cron')
 const express = require('express')
 const cheerio = require('cheerio')
 
-const hook = 'T1192U9B4/B013R0CF2H3/BQWBiYadgT23swOdqm0X3dt9'
+// Test channel HOOK //
+// const hook = 'T1192U9B4/B013R0CF2H3/BQWBiYadgT23swOdqm0X3dt9'
+
+const hook = 'T1192U9B4/B013BJYBYEB/i6xOTtiSWpwJg0xRxYBeOWuZ'
 const API_key = '5b692760-b0cd-4273-9878-f3bf88558a90'
 const wordOfTheDayUrl = 'https://www.merriam-webster.com/word-of-the-day'
 const PORT = process.env.PORT || 5000
@@ -23,7 +26,7 @@ app.listen(PORT)
 const getWordOfTheDay = async () => {
   const result = await axios.get(wordOfTheDayUrl)
   const $ = cheerio.load(result.data)
-  return ({word: $('h1').text(), didYouKnow: $('.left-content-box p').text()})
+  return ({word: $('h1').text(), example: $('.wotd-examples > p:first-of-type').text()})
 }
 
 /// Send request to dictionary API ///
@@ -60,7 +63,7 @@ const section = meaning => ({
         }})
 })
 
-const message = (word, didYouKnow, entries) => JSON.stringify({
+const message = (word, example, entries) => JSON.stringify({
     blocks: [
         {
             type: "divider"
@@ -79,7 +82,7 @@ const message = (word, didYouKnow, entries) => JSON.stringify({
         type: "section",
         text: {
             type: "mrkdwn",
-            text: `_${didYouKnow}_`
+            text: `_${example}_`
         }
     ,})
 })
@@ -90,7 +93,7 @@ const main = async () => {
         // get today's word of the day
         const wordOfTheDay = await getWordOfTheDay()
         const word = wordOfTheDay.word
-        const didYouKnow = wordOfTheDay.didYouKnow
+        const example = wordOfTheDay.example
 
         // get the data
         const entries = await getData(word)
@@ -99,7 +102,7 @@ const main = async () => {
         const res = await axios({
             url: `https://hooks.slack.com/services/${hook}`,
             method: 'POST',
-            data: message(word, didYouKnow, entries),
+            data: message(word, example, entries),
         })
 
         console.log('Word of the day sent!!')
@@ -108,6 +111,5 @@ const main = async () => {
     }
 }
 
-cron.schedule('30 8 * * *', () => {
-    main()
-})
+// Schedule task in UCT time
+cron.schedule('0 7 * * *', () => main())
