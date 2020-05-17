@@ -108,8 +108,4 @@ const main = async () => {
     }
 }
 
-cron.schedule('0 9 * * *', () => {
-    main()
-}, {
-    timezone: "Europe/Warsaw"
-})
+cron.schedule('25 10 * * *', () => main())
