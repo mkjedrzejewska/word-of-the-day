@@ -88,7 +88,7 @@ const message = (word, example, didYouKnow, entries) => JSON.stringify({
         type: "section",
         text: {
             type: "mrkdwn",
-            text: `*_did you know?_*\n ${didYouKnow}`
+            text: `*_Did you know?_*\n ${didYouKnow}`
         }
     ,})
 })
