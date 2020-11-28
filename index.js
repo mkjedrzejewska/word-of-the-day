@@ -8,9 +8,9 @@ const express = require('express')
 const cheerio = require('cheerio')
 
 // Test channel HOOK //
-// const hook = 'T1192U9B4/B013R0CF2H3/BQWBiYadgT23swOdqm0X3dt9'
+const hook = 'T1192U9B4/B013R0CF2H3/BQWBiYadgT23swOdqm0X3dt9'
 
-const hook = 'T1192U9B4/B013BJYBYEB/i6xOTtiSWpwJg0xRxYBeOWuZ'
+//const hook = 'T1192U9B4/B013BJYBYEB/i6xOTtiSWpwJg0xRxYBeOWuZ'
 const API_key = '5b692760-b0cd-4273-9878-f3bf88558a90'
 const wordOfTheDayUrl = 'https://www.merriam-webster.com/word-of-the-day'
 const PORT = process.env.PORT || 5000
@@ -118,5 +118,7 @@ const main = async () => {
     }
 }
 
+
+//main()
 // Schedule task in UCT time
-cron.schedule('0 7 * * *', () => main())
+cron.schedule('* * * * *', () => main())
