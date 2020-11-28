@@ -121,4 +121,4 @@ const main = async () => {
 
 // main()
 // Schedule task in UCT time
-cron.schedule('0 7 * * *', () => main())
+cron.schedule('0 8 * * *', () => main())
