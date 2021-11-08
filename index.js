@@ -26,7 +26,7 @@ app.listen(PORT)
 const getWordOfTheDay = async () => {
   const result = await axios.get(wordOfTheDayUrl)
   const $ = cheerio.load(result.data)
-  return ({word: $('h1').text(), example: $('.wotd-examples > p:first-of-type').text(), didYouKnow: $('.left-content-box p').text()})
+  return ({word: $('h1').text(), example: $('.wotd-examples .left-content-box p').text(), didYouKnow: $('.did-you-know-wrapper p').text()})
 }
 
 /// Send request to dictionary API ///
